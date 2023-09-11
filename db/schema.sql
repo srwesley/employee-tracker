@@ -5,23 +5,25 @@ USE employee_tracker_db;
 
 -- Creates a department table in the employee_tracker database --
 CREATE TABLE department (
-    name VARCHAR(30) PRIMARY KEY
+    id INT PRIMARY KEY,
+    name VARCHAR(30)
 );
 
 -- Creates a role table in the employee_tracker database -- 
 CREATE TABLE role (
-    title  VARCHAR(30) PRIMARY KEY,
-    department VARCHAR(30),
-    salary DECIMAL
+    id INT PRIMARY KEY,
+    title  VARCHAR(30),
+    salary DECIMAL,
+    department INT
 );
 
 -- Creates an employee table in the employee_tracker database --
 CREATE TABLE employee (
-    id INTEGER AUTO_INCREMENT PRIMARY KEY,
+    id INT PRIMARY KEY,
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(30) NOT NULL,
-    title VARCHAR(30),
-    department VARCHAR(30),
+    title INT,
+    department INT,
     salary DECIMAL,
-    manager VARCHAR(30)
+    manager INT
 );

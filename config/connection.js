@@ -1,7 +1,9 @@
+// Dependencies
 const mysql = require("mysql2");
 
 require("dotenv").config();
 
+// Creates the variable for the connection to the server and then exports it
 const db = mysql.createConnection(
     {
         host: "localhost",

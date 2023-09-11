@@ -59,6 +59,7 @@ var employee_tracker = function () {
                 });
             } else if (answers.prompt === "Add a department") {
                 inquirer.prompt([{
+                    // Adds a department
                     type: "input",
                     name: "department",
                     message: "What is the name of the department?",
@@ -78,11 +79,13 @@ var employee_tracker = function () {
                     });
                 })
             } else if (answers.prompt === "Add a role") {
+                // Beginning with the database so that the departments can be acquired for choice
                 database.query(`SELECT * FROM department`, (err, result) => {
                     if (err) throw err;
                     
                     inquirer.prompt([
                         {
+                            // Adds a role
                             type: "input",
                             name: "role",
                             message: "What is the name of the role?",
@@ -96,6 +99,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Adds a salary
                             type: "input",
                             name: "salary",
                             message: "What is the salary of the role?",
@@ -109,6 +113,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            //Department
                             type: "list",
                             name: "department",
                             message: "Which department does the role belong to?",
@@ -121,6 +126,7 @@ var employee_tracker = function () {
                             }
                         }
                     ]).then((answers) => {
+                        // Compares the result and stores it into the variable
                         for (var i = 0; i < result.length; i++) {
                             if (result[i].name === answers.department) {
                                 var department = result[i];
@@ -135,11 +141,13 @@ var employee_tracker = function () {
                     })
                 });
             } else if (answers.prompt === "Add an employee") {
+                // Calls the database to acquire the roles and managers
                 database.query(`SELECT * FROM employee, role`, (err, result) => {
                     if (err) throw err;
 
                     inquirer.prompt([
                         {
+                            // Adds employee first name
                             type: "input",
                             name: "firstName",
                             message: "What is the employee's first name?",
@@ -153,6 +161,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Adds employee last name
                             type: "input",
                             name: "lastName",
                             message: "What is the employee's last name?",
@@ -166,6 +175,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Adds employee role
                             type: "list",
                             name: "title",
                             message: "What is the employee's role?",
@@ -179,6 +189,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Adds employee department
                             type: "list",
                             name: "department",
                             message: "What is the employee's department?",
@@ -192,6 +203,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Adds employee salary
                             type: "number",
                             name: "salary",
                             message: "What is the employee's salary?",
@@ -205,6 +217,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Adds employee manager
                             type: "list",
                             name: "manager",
                             message: "Who is the employee's manager?",
@@ -218,6 +231,7 @@ var employee_tracker = function () {
                             }
                         }
                     ]).then((answers) => {
+                        // Compares the result and stores it into the variable
                         for (var i = 0; i < result.length; i++) {
                             if (result[i].title === answers.role) {
                                 var role = result[i];
@@ -232,11 +246,13 @@ var employee_tracker = function () {
                     })
                 });
             } else if (answers.prompt === "Update an employee (Role, Department, Salary, and Manager") {
+                // Calls the database to acquire the roles and managers
                 database.query("SELECT * FROM employee", (err, result) => {
                     if (err) throw err;
 
                     inquirer.prompt([
                         {
+                            // Chooses an employee to update
                             type: "list",
                             name: "employee",
                             message: "Which employee's role do you want to update?",
@@ -246,6 +262,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Updates the employee's new role
                             type: "list",
                             name: "title",
                             message: "What is their new role?",
@@ -255,6 +272,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Updates the employee's new department
                             type: "list",
                             name: "department",
                             message: "What is their new department?",
@@ -264,6 +282,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Updates the employee's new salary
                             type: "input",
                             name: "salary",
                             message: "What is the employee's new salary?",
@@ -273,6 +292,7 @@ var employee_tracker = function () {
                             }
                         },
                         {
+                            // Updates the employee's new manager
                             type: "list",
                             name: "manager",
                             message: "Who is the employee's manager?",
@@ -282,6 +302,7 @@ var employee_tracker = function () {
                             }
                         },
                     ]).then((answers) => {
+                        // Compares the result and stores it into the variable
                         const employee = result.find(row => `${row.first_name} ${row.last_name}` === answers.employee);
                         const { title, department, salary, manager } = answers;
                         const values = [title, department, salary, manager, employee.first_name, employee.last_name];
@@ -294,11 +315,13 @@ var employee_tracker = function () {
                     });
                 });
             } else if (answers.prompt === "Delete an employee") {
+                // Calls the database to acquire the list of employees
                 database.query("SELECT * FROM employee", (err, result) => {
                     if (err) throw err;
 
                     inquirer.prompt([
                         {
+                            // Chooses an employee to delete
                             type: "list",
                             name: "employee",
                             message: "Which employee do you want to delete?",
@@ -308,6 +331,7 @@ var employee_tracker = function () {
                             }
                         }
                     ]).then((answers) => {
+                        // Compares the result and stores it into the variable
                         const employee = result.find(row => `${row.first_name} ${row.last_name}` === answers.employee);
                         const { first_name, last_name } = employee;
 
@@ -323,6 +347,7 @@ var employee_tracker = function () {
                     if (err) throw err;
                     inquirer.prompt([
                         {
+                            // Chooses a department to delete
                             type: "list",
                             name: "department",
                             message: "Which department would you like to delete?",
@@ -332,6 +357,7 @@ var employee_tracker = function () {
                             }
                         }
                     ]).then((answer) => {
+                        // Compares the result and stores it into the variable
                         const departmentName = answer.department;
                         const department = result.find(row => row.name === departmentName);
                         const id = department.id;
@@ -347,6 +373,7 @@ var employee_tracker = function () {
                     if (err) throw err;
                     inquirer.prompt([
                         {
+                            // Chooses a role to delete
                             type: "list",
                             name: "role",
                             message: "Which role would you like to delete?",
@@ -356,6 +383,7 @@ var employee_tracker = function () {
                             }
                         }
                     ]).then((answer) => {
+                        // Compares the result and stores it into the variable
                         const roleTitle = answer.role;
                         const role = result.find(row => row.title === roleTitle);
                         const values = [roleTitle];
@@ -367,6 +395,7 @@ var employee_tracker = function () {
                     });
                 });
             } else if (answers.prompt === "Log Out") {
+                // Logs out of the database
                 database.end();
                 console.log(chalk.redBright("Have a great day!"));
             }

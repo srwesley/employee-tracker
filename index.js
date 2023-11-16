@@ -33,7 +33,7 @@ var employee_tracker = function () {
             type: "list",
             name: "prompt",
             message: chalk.whiteBright("What would you like to do?" + "\n"),
-            choices: ["View all employees", "View all departments", "View all roles", "Add an employee", "Add a department", "Add a role", "Update an employee (Role, Department, Salary, Manager)", "Delete an employee", "Delete a department", "Delete a role", "Log Out"]
+            choices: ["View all employees", "View all departments", "View all roles", "Add an employee", "Add a department", "Add a role", "Update an employee (Role, Department, Salary, and Manager)", "Delete an employee", "Delete a department", "Delete a role", "Log Out"]
         }]).then((answers) => {
             // Views the department table in the database
             if (answers.prompt === "View all departments") {
@@ -51,7 +51,7 @@ var employee_tracker = function () {
                     employee_tracker();
                 });
             } else if (answers.prompt === "View all employees") {
-                database.query(`SELECT * FROM employee`, (err, result) => {
+                database.query(`SELECT * FROM employee LEFT JOIN role ON role.id = employee.role_id LEFT JOIN department ON department.id = role.department_id`, (err, result) => {
                     if (err) throw err;
                     console.log("Viewing all employees:\n");
                     console.table(result);
@@ -120,20 +120,20 @@ var employee_tracker = function () {
                             choices: () => {
                                 var array = [];
                                 for (var i = 0; i < result.length; i++) {
-                                    array.push(result[i].name);
+                                    array.push({ name: result[i].name, value: result[i].id });
                                 }
                                 return array;
                             }
                         }
                     ]).then((answers) => {
                         // Compares the result and stores it into the variable
-                        for (var i = 0; i < result.length; i++) {
-                            if (result[i].name === answers.department) {
-                                var department = result[i];
-                            }
-                        }
+                        // for (var i = 0; i < result.length; i++) {
+                        //     if (result[i].name === answers.department) {
+                        //         var department = result[i];
+                        //     }
+                        // }
 
-                        database.query(`INSERT INTO role (title, salary, department) VALUES (?, ?, ?)`, [answers.role, answers.salary, answers.department], (err, result) => {
+                        database.query(`INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`, [answers.role, answers.salary, answers.department], (err, result) => {
                             if (err) throw err;
                             console.log(`Added ${answers.role} to the database.`);
                             employee_tracker();
@@ -142,7 +142,7 @@ var employee_tracker = function () {
                 });
             } else if (answers.prompt === "Add an employee") {
                 // Calls the database to acquire the roles and managers
-                database.query(`SELECT * FROM employee, role`, (err, result) => {
+                database.query(`SELECT * FROM employee, role JOIN department ON role.department_id = department.id`, (err, result) => {
                     if (err) throw err;
 
                     inquirer.prompt([
@@ -182,38 +182,10 @@ var employee_tracker = function () {
                             choices: () => {
                                 var array = [];
                                 for (var i = 0; i < result.length; i++) {
-                                    array.push(result[i].title);
+                                    array.push({ name: result[i].title, value: result[i].role_id});
                                 }
                                 var newArray = [...new Set(array)];
                                 return newArray;
-                            }
-                        },
-                        {
-                            // Adds employee department
-                            type: "list",
-                            name: "department",
-                            message: "What is the employee's department?",
-                            choices: () => {
-                                var array = [];
-                                for (var i = 0; i < result.length; i++) {
-                                    array.push(result[i].department);
-                                }
-                                var newArray = [...new Set(array)];
-                                return newArray;
-                            }
-                        },
-                        {
-                            // Adds employee salary
-                            type: "number",
-                            name: "salary",
-                            message: "What is the employee's salary?",
-                            validate: salaryInput => {
-                                if (salaryInput) {
-                                    return true;
-                                } else {
-                                    console.log("Please add a salary!");
-                                    return false;
-                                }
                             }
                         },
                         {
@@ -224,10 +196,18 @@ var employee_tracker = function () {
                             choices: () => {
                                 var array = [];
                                 for (var i = 0; i < result.length; i++) {
-                                    array.push(result[i].first_name + " " + result[i].last_name);
-                                }
-                                var newArray = [...new Set(array)];
-                                return newArray;
+                                    array.push({ name: result[i].first_name + " " + result[i].last_name, value: result[i].id });
+                                };
+                                var newArray = {}
+                                array.forEach(item => {
+                                    newArray[item.name] = newArray[item.value];
+                                });
+                                var finalArray = [];
+                                for (let key in newArray) {
+                                    finalArray.push({name: key, value: newArray[key]})
+                                };
+                                // var newArray = [...new Set(array)];
+                                return finalArray;
                             }
                         }
                     ]).then((answers) => {
@@ -238,17 +218,18 @@ var employee_tracker = function () {
                             }
                         }
 
-                        database.query(`INSERT INTO employee (first_name, last_name, title, department, salary, manager) VALUES (?, ?, ?, ?, ?, ?)`, [answers.firstName, answers.lastName, answers.title, answers.department, answers.salary, answers.manager], (err, result) => {
+                        database.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`, [answers.firstName, answers.lastName, answers.title, answers.manager], (err, result) => {
                             if (err) throw err;
                             console.log(`Added ${answers.firstName} ${answers.lastName} to the database.`);
                             employee_tracker();
                         });
                     })
                 });
-            } else if (answers.prompt === "Update an employee (Role, Department, Salary, and Manager") {
+            } else if (answers.prompt === "Update an employee (Role, Department, Salary, and Manager)") {
                 // Calls the database to acquire the roles and managers
-                database.query("SELECT * FROM employee", (err, result) => {
+                database.query("SELECT * FROM employee JOIN role ON role.id = employee.role_id", (err, result) => {
                     if (err) throw err;
+                    console.log(result);
 
                     inquirer.prompt([
                         {
@@ -258,6 +239,7 @@ var employee_tracker = function () {
                             message: "Which employee's role do you want to update?",
                             choices: () => {
                                 const uniqueEmployees = [...new Set(result.map(row => `${row.first_name} ${row.last_name}`))];
+                                console.log(uniqueEmployees);
                                 return uniqueEmployees;
                             }
                         },
@@ -267,28 +249,9 @@ var employee_tracker = function () {
                             name: "title",
                             message: "What is their new role?",
                             choices: () => {
-                                const uniqueTitles = [...new Set(result.map(row => row.title))];
+                                const uniqueTitles = [...new Set(result.map(row => ({ name: row.title, value: row.role_id })))];
+                                console.log(uniqueTitles);
                                 return uniqueTitles;
-                            }
-                        },
-                        {
-                            // Updates the employee's new department
-                            type: "list",
-                            name: "department",
-                            message: "What is their new department?",
-                            choices: () => {
-                                const uniqueDepartments = [...new Set(result.map(row => row.department))];
-                                return uniqueDepartments;
-                            }
-                        },
-                        {
-                            // Updates the employee's new salary
-                            type: "input",
-                            name: "salary",
-                            message: "What is the employee's new salary?",
-                            validate: salaryInput => {
-                                const isValid = !isNaN(parseFloat(salaryInput));
-                                return isValid || "Please enter a number.";
                             }
                         },
                         {
@@ -297,19 +260,19 @@ var employee_tracker = function () {
                             name: "manager",
                             message: "Who is the employee's manager?",
                             choices: () => {
-                                const uniqueManagers = [...new Set(result.map(row => `${row.first_name} ${row.last_name}`))];
+                                const uniqueManagers = [...new Set(result.map(row => ({ name: `${row.first_name} ${row.last_name}`, value: row.id })))];
                                 return uniqueManagers;
                             }
                         },
                     ]).then((answers) => {
                         // Compares the result and stores it into the variable
                         const employee = result.find(row => `${row.first_name} ${row.last_name}` === answers.employee);
-                        const { title, department, salary, manager } = answers;
-                        const values = [title, department, salary, manager, employee.first_name, employee.last_name];
+                        const { title, manager } = answers;
+                        const values = [title, manager, employee.first_name, employee.last_name];
 
-                        database.query("UPDATE employee SET title = ?, department = ?,  salary = ?, manager = ? WHERE first_name = ? AND last_name = ?", values, (err, result) => {
+                        database.query("UPDATE employee SET role_id = ?, manager_id = ? WHERE first_name = ? AND last_name = ?", values, (err, result) => {
                             if (err) throw err;
-                            console.log(`Updated ${employee.first_name} ${employee.last_name}'s role to ${title} in the ${department} department witht their new manager ${manager} and a new salary of $${salary}.`);
+                            console.log(`Updated ${employee.first_name} ${employee.last_name}'s role to ${title} under their new manager ${manager}.`);
                             employee_tracker();
                         });
                     });
